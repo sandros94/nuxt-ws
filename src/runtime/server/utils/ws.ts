@@ -44,7 +44,6 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
       // Setup notification hooks
       nitroHooks.hook('ws:publish', (...messages) => {
         for (const { topic, payload } of messages) {
-          console.log('triggered', topic, payload)
           if (!topic || !payload) continue
           wsBroadcast(
             peer,
