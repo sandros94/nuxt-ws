@@ -2,10 +2,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { type Options, destr } from 'destr'
 import type { Message } from 'crossws'
 
-import type {
-  Peer,
-  WSHandlerHooks,
-} from '../../types'
+import type { WSHandlerHooks } from '../../types'
 import { defineWebSocketHandler, useNitroApp, useRuntimeConfig } from '#imports'
 
 interface _WSRuntimeConfig {
@@ -45,15 +42,7 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
       nitroHooks.hook('ws:publish', (...messages) => {
         for (const { topic, payload } of messages) {
           if (!topic || !payload) continue
-          wsBroadcast(
-            peer,
-            topic,
-            JSON.stringify({
-              topic,
-              payload,
-            }),
-            { compress: true },
-          )
+          peer.publish(topic, JSON.stringify({ topic, payload }), { compress: true })
         }
       })
 
@@ -123,36 +112,4 @@ export async function wsSafeValidateMessage<
   if (result instanceof Promise) result = await result
 
   return result
-}
-
-/**
- * Broadcasts a message to peers subscribed to a specific topic only once.
- *
- * @param {Peer} peer - WebSocket peer instance
- * @param {string} topic - Topic to broadcast to
- * @param {any} message - Message to broadcast
- * @param {object} [options] - Broadcast options
- * @param {boolean} [options.compress] - Whether to compress the message
- */
-export function wsBroadcast( // TODO: is it still needed?
-  peer: Peer,
-  topic: string,
-  message: any,
-  options?: {
-    compress?: boolean
-  },
-) {
-  let firstPeer: Peer | null = null
-
-  for (const _peer of peer.peers) {
-    if (_peer['_topics'].has(topic)) {
-      firstPeer = _peer
-      break
-    }
-  }
-
-  if (firstPeer?.id === peer.id) {
-    firstPeer.send(message, options)
-    firstPeer.publish(topic, message, options)
-  }
 }
