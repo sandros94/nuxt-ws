@@ -6,15 +6,11 @@ import {
   withQuery,
 } from 'ufo'
 
-import type { Ref, MaybeRef } from '#imports'
 import {
   computed,
   reactive,
-  ref,
-  toRef,
   toRefs,
   watch,
-  onBeforeUnmount,
   useState,
   useRequestURL,
   useRuntimeConfig,
@@ -32,12 +28,11 @@ const wsStateKey = '$ws:state'
 
 function wsState<
   T extends Record<string | AllTopics, any>,
->(topics?: MaybeRef<Array<keyof T | string>>) {
+>(topics?: Array<keyof T | string>) {
   const { defaults, internals } = useRuntimeConfig().public.ws.topics as WSRuntimeConfig['topics']
-  const _topics = toRef(topics || [])
 
   const mergedTopics = computed(
-    () => merge(internals, [...defaults, ..._topics.value]) as (string | AllTopics)[],
+    () => merge(internals, [...defaults, ...topics || []]) as (string | AllTopics)[],
   )
   const states = useState<T>(wsStateKey,
     () => mergedTopics.value.reduce((acc, topic) => ({
@@ -53,13 +48,13 @@ function wsState<
  * Each state is based on the available topics defined in the runtime configuration or via `useWS`
  *
  * @template T - Type of the topic payload mapping
- * @param {MaybeRef<Array<keyof T | string>>} [topics] - Array of topic names to subscribe to
+ * @param {Array<keyof T | string>} [topics] - Array of topic names to subscribe to
  *
  * @returns {MultiState<T>} Reactive state object for the topics
  */
 export function useWSState<
   T extends Record<string | AllTopics, any>,
->(topics?: MaybeRef<Array<keyof T | string>>): WSStates<T> {
+>(topics: Array<keyof T | string> = []): WSStates<T> {
   const states = wsState(topics)
   return toRefs<T>(states.value)
 }
@@ -68,7 +63,7 @@ export function useWS<
   T extends Record<string | AllTopics, any>,
   D = any,
 >(
-  topics?: MaybeRef<Array<keyof T | string>>,
+  topics: Array<keyof T | string> = [],
   options?: WSOptions,
 ): UseWSReturn<T, D> {
   const { route, topics: defTopics } = useRuntimeConfig().public.ws as WSRuntimeConfig
@@ -79,10 +74,7 @@ export function useWS<
     throw new Error('[useWS] `route` is required in options or `nuxt.config.ts`')
   }
 
-  const _topics = topics === undefined
-    ? ref<string[]>([])
-    : toRef(topics) as Ref<Array<keyof T>>
-  const states = wsState<T>(_topics)
+  const states = wsState<T>(topics)
 
   const _query = reactive({
     ...query,
@@ -185,24 +177,8 @@ export function useWS<
       setTimeout(() => open(), 100)
     })
 
-  const stopWatchTopics = watch(_topics, (newTopics, oldTopics) => {
-    // get the difference between the new and old topics, subscribe/unsubscribe accordingly
-    const added = newTopics.filter(topic => !oldTopics?.includes(topic))
-    const removed = oldTopics?.filter(topic => !newTopics.includes(topic)) || []
-
-    added.forEach((topic) => {
-      send('subscribe', topic)
-      states.value[topic] = undefined as any
-    })
-    removed.forEach((topic) => {
-      send('unsubscribe', topic)
-      states.value[topic] = undefined as any
-    })
-  }, { immediate: true })
-
-  onBeforeUnmount(() => {
-    stopWatchTopics()
-    close()
+  topics.forEach((topic) => {
+    send('subscribe', topic)
   })
 
   return {

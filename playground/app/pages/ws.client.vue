@@ -33,8 +33,8 @@
               {{ chat }}
             </code>
             <br>
-            <code v-if="states['notifications']">
-              {{ states['notifications'] }}
+            <code v-if="notifications">
+              {{ notifications }}
             </code>
             <br>
             <code v-if="session">
@@ -76,6 +76,7 @@ const { states, data, status, send, open } = useWS<{
 }>(['notifications', 'chat'])
 
 const {
+  notifications,
   chat,
   session,
   _internal,
