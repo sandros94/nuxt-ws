@@ -56,20 +56,6 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
           )
         }
       })
-      nitroHooks.hook('ws:publish:internal', (...messages) => {
-        for (const { topic, payload } of messages) {
-          if (!topic || !payload || !config.topics.internals.includes(topic)) continue
-          wsBroadcast(
-            peer,
-            topic,
-            JSON.stringify({
-              topic,
-              payload,
-            }),
-            { compress: true },
-          )
-        }
-      })
 
       return hooks.open?.(peer, { config })
     },

@@ -2,7 +2,7 @@ import type { UseWebSocketOptions, UseWebSocketReturn } from '@vueuse/core'
 import type { Peer, Hooks, Message } from 'crossws'
 import type { ToRefs } from 'vue'
 
-import type { AllTopics, InternalTopics, WSRuntimeConfig } from '#build/types/ws'
+import type { AllTopics, WSRuntimeConfig } from '#build/types/ws'
 
 export type MaybePromise<T> = T | Promise<T>
 
@@ -48,5 +48,4 @@ export interface WSHandlerHooks extends Partial<Omit<Hooks, 'open' | 'close' | '
 
 export interface WSHooks {
   'ws:publish': (...messages: { topic: string | AllTopics, payload: unknown }[]) => MaybePromise<void>
-  'ws:publish:internal': (...messages: { topic: InternalTopics, payload: unknown }[]) => MaybePromise<void>
 }
