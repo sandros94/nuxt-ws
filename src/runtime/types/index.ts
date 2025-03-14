@@ -1,6 +1,6 @@
 import type { UseWebSocketOptions, UseWebSocketReturn } from '@vueuse/core'
 import type { Peer, Message, WSError } from 'crossws'
-import type { ToRefs } from 'vue'
+import type { Ref, ToRefs } from 'vue'
 
 // TODO: check nitro build types
 import type { AllTopics } from '#build/types/ws'
@@ -28,10 +28,21 @@ export interface WSMessage<
 export type WSStates<T extends Record<string | AllTopics, any>> = ToRefs<T>
 
 export interface UseWSReturn<T extends Record<string | AllTopics, any>, D> extends Omit<UseWebSocketReturn<D>, 'send'> {
+  /**
+   * Reference to the latest data received via the websocket,
+   * can be watched to respond to incoming messages
+   */
+  _data: Ref<D | null>
   states: WSStates<T>
   send<M extends (string | ArrayBuffer | Blob | object)>(payload: M): boolean
   send<M extends { type: 'subscribe' | 'unsubscribe', topic: keyof T }>(type: M['type'], topic: M['topic']): boolean
   send<M extends { type: 'publish', topic: keyof T, payload: T[keyof T] }>(type: 'publish', topic: M['topic'], payload: M['payload']): boolean
+  /**
+   * Sends data through the websocket connection.
+   *
+   * @param data
+   * @param useBuffer when the socket is not yet open, store the data into the buffer and sent them one connected. Default to true.
+   */
   _send: UseWebSocketReturn<D>['send']
 }
 

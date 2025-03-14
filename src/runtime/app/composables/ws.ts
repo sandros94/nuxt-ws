@@ -7,6 +7,8 @@ import {
 } from 'ufo'
 
 import {
+  type Ref,
+  ref,
   computed,
   reactive,
   toRefs,
@@ -75,6 +77,7 @@ export function useWS<
   }
 
   const states = wsState<T>(topics)
+  const data: Ref<D | null> = ref(null)
 
   const _query = reactive({
     ...query,
@@ -92,17 +95,20 @@ export function useWS<
 
   const {
     status,
-    data,
+    data: _data,
     send: _send,
     open,
     close,
     ws,
-  } = useWebSocket(url, {
+  } = useWebSocket<D>(url, {
     ...opts,
     onMessage(_, message) {
       const parsed = destr<WSMessage<T>>(message.data)
       if (!!parsed && typeof parsed === 'object' && 'topic' in parsed && 'payload' in parsed) {
         states.value[parsed.topic] = parsed.payload as T[keyof T]
+      }
+      else {
+        data.value = message.data
       }
 
       opts?.onMessage?.(_, message)
@@ -184,6 +190,7 @@ export function useWS<
   return {
     states: toRefs<T>(states.value),
     data,
+    _data,
     status,
     send,
     _send,
