@@ -30,7 +30,7 @@ export default defineReactiveWSHandler({
 
   async message(peer, message) {
     // Validate the incoming message
-    const parsedMessage = v.safeParse(
+    const parsedMessage = await wsValidateMessage(
       v.union([
         v.object({
           type: v.picklist(['subscribe', 'unsubscribe']),
@@ -42,13 +42,12 @@ export default defineReactiveWSHandler({
           payload: v.any(),
         }),
       ]),
-      wsParseMessage(message.text()),
+      message,
     )
-    if (!parsedMessage.success) return
     const mem = useMem('ws')
 
-    if (parsedMessage.output.type === 'publish') {
-      const { topic, payload } = parsedMessage.output
+    if (parsedMessage.type === 'publish') {
+      const { topic, payload } = parsedMessage
 
       // Update data from the storage (or init it)
       const _data = await mem.getItem<Record<string, string>>(topic) || {}
@@ -60,7 +59,7 @@ export default defineReactiveWSHandler({
       peer.publish(topic, JSON.stringify({ topic, payload: newData }), { compress: true })
     }
     else {
-      const { type, topic } = parsedMessage.output
+      const { type, topic } = parsedMessage
       if (type === 'subscribe') {
         peer.subscribe(topic)
         const payload = await mem.getItem(topic)

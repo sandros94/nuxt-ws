@@ -60,6 +60,14 @@ export default defineNuxtModule<ModuleOptions>({
         from: resolve('./runtime/server/utils/ws'),
       },
       {
+        name: 'wsValidateMessage',
+        from: resolve('./runtime/server/utils/ws'),
+      },
+      {
+        name: 'wsSafeValidateMessage',
+        from: resolve('./runtime/server/utils/ws'),
+      },
+      {
         name: 'defineReactiveWSHandler',
         from: resolve('./runtime/server/utils/ws'),
       },

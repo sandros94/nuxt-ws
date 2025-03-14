@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { type Options, destr } from 'destr'
 import type { Message } from 'crossws'
 
@@ -103,6 +104,27 @@ export function wsParseMessage<T = any>(message: Message | string, options?: Opt
       : message.text(),
     options,
   )
+}
+
+export async function wsValidateMessage<
+  T extends StandardSchemaV1,
+>(schema: T, message: Message | string): Promise<StandardSchemaV1.InferOutput<T>> {
+  let result = schema['~standard'].validate(wsParseMessage(message))
+  if (result instanceof Promise) result = await result
+
+  if (result.issues) {
+    throw new Error(JSON.stringify(result.issues, null, 2))
+  }
+
+  return result.value
+}
+export async function wsSafeValidateMessage<
+  T extends StandardSchemaV1,
+>(schema: T, message: Message | string): Promise<StandardSchemaV1.InferOutput<T>> {
+  let result = schema['~standard'].validate(wsParseMessage(message))
+  if (result instanceof Promise) result = await result
+
+  return result
 }
 
 /**
