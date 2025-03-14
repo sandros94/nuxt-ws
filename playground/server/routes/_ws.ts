@@ -61,6 +61,9 @@ export default defineReactiveWSHandler({
     else {
       const { type, topic } = parsedMessage
       if (type === 'subscribe') {
+        if (topic !== 'chat' && topic !== 'notifications') return // fake authorization check
+
+        // Subscribe to non-default topics and fetch content from storage
         peer.subscribe(topic)
         const payload = await mem.getItem(topic)
         if (payload)

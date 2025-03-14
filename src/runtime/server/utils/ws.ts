@@ -30,10 +30,8 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
     return config = useRuntimeConfig().public.ws as _WSRuntimeConfig
   }
 
-  // TODO: get runtimeConfig topics and merge them with defaultChannels
-
   return defineWebSocketHandler({
-    upgrade: req => hooks.upgrade?.(req),
+    upgrade: req => hooks.upgrade?.(req, config),
 
     async open(peer) {
       const config = getConfig()
@@ -59,7 +57,7 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
         }
       })
 
-      return hooks.open?.(peer, { config })
+      return hooks.open?.(peer, config)
     },
 
     message(peer, message) {
@@ -71,16 +69,16 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
       if (m?.type === 'unsubscribe' && m?.topic)
         peer.unsubscribe(m.topic)
 
-      return hooks.message?.(peer, message, { config })
+      return hooks.message?.(peer, message, config)
     },
 
     async close(peer, details) {
       const config = getConfig()
 
-      return hooks.close?.(peer, details, { config })
+      return hooks.close?.(peer, details, config)
     },
 
-    error: (peer, error) => hooks.error?.(peer, error),
+    error: (peer, error) => hooks.error?.(peer, error, config),
   })
 }
 

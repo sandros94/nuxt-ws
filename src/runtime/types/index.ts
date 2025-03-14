@@ -1,12 +1,16 @@
 import type { UseWebSocketOptions, UseWebSocketReturn } from '@vueuse/core'
-import type { Peer, Hooks, Message } from 'crossws'
+import type { Peer, Message, WSError } from 'crossws'
 import type { ToRefs } from 'vue'
 
-import type { AllTopics, WSRuntimeConfig } from '#build/types/ws'
+import type { AllTopics } from '#build/types/ws' // TODO: check nitro build types
 
 export type MaybePromise<T> = T | Promise<T>
 
-export type { Peer, Hooks, Message }
+export type { Peer, Message, WSError }
+export type UpgradeRequest = Request | {
+  url: string
+  headers: Headers
+}
 
 export interface WSOptions extends UseWebSocketOptions {
   route?: string
@@ -30,20 +34,40 @@ export interface UseWSReturn<T extends Record<string | AllTopics, any>, D> exten
   _send: UseWebSocketReturn<D>['send']
 }
 
-export interface WSHandlerHooks extends Partial<Omit<Hooks, 'open' | 'close' | 'message'>> {
+interface _WSRuntimeConfig {
+  route?: string
+  topics: {
+    defaults: string[]
+    internals: string[]
+  }
+}
+
+export interface WSHandlerHooks {
+  /** Upgrading */
+  /**
+   *
+   * @param request
+   * @throws {Response}
+   */
+  upgrade: (request: UpgradeRequest & {
+    context: Peer['context']
+  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+  }, config: _WSRuntimeConfig) => MaybePromise<Response | ResponseInit | void>
+
   /** A socket is opened */
-  open: (peer: Peer, config: { config: WSRuntimeConfig }) => MaybePromise<void>
+  open: (peer: Peer, config: _WSRuntimeConfig) => MaybePromise<void>
 
   /** A message is received */
-  message: (peer: Peer, message: Message, config: { config: WSRuntimeConfig }) => MaybePromise<void>
+  message: (peer: Peer, message: Message, config: _WSRuntimeConfig) => MaybePromise<void>
 
   /** A socket is closed */
   close: (peer: Peer, details: {
     code?: number
     reason?: string
-  }, config: { config: WSRuntimeConfig }) => MaybePromise<void>
+  }, config: _WSRuntimeConfig) => MaybePromise<void>
 
-  // TODO: add other hooks
+  /** An error occurs */
+  error: (peer: Peer, error: WSError, config: _WSRuntimeConfig) => MaybePromise<void>
 }
 
 export interface WSHooks {
