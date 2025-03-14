@@ -2,7 +2,8 @@ import type { UseWebSocketOptions, UseWebSocketReturn } from '@vueuse/core'
 import type { Peer, Message, WSError } from 'crossws'
 import type { ToRefs } from 'vue'
 
-import type { AllTopics } from '#build/types/ws' // TODO: check nitro build types
+// TODO: check nitro build types
+import type { AllTopics } from '#build/types/ws'
 
 export type MaybePromise<T> = T | Promise<T>
 
