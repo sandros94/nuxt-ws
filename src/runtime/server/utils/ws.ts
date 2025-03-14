@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { type Options, destr } from 'destr'
-import type { Message } from 'crossws'
+import { Message } from 'crossws'
 
 import type { WSHandlerHooks } from '../../types'
 import { defineWebSocketHandler, useNitroApp, useRuntimeConfig } from '#imports'
@@ -93,22 +93,117 @@ export function wsParseMessage<T = any>(message: Message | string, options?: Opt
   )
 }
 
+/**
+ * Validates a WebSocket message against a given schema.
+ * If the message is invalid, the function throws an error with the validation issues.
+ * Otherwise, it returns the validated message.
+ * If the message is a Message object, it's parsed with `wsParseMessage` before validation.
+ *
+ * @template T - The schema to validate the message against.
+ * @param {T} schema - The schema to validate the message against.
+ * @param {Message | StandardSchemaV1.InferInput<T>} message - The WebSocket message to validate.
+ * @returns {Promise<StandardSchemaV1.InferOutput<T>>} The validated message.
+ * @throws {Error} If the message is invalid, the function throws an error with the validation issues.
+ *
+ * @example
+ * import * as v from 'valibot'
+ *
+ * message(peer, message) {
+ *   const parsedMessage = await wsValidateMessage(
+ *     v.object({
+ *       type: v.picklist(['subscribe', 'unsubscribe']),
+ *       topic: v.string(),
+ *     }),
+ *     message,
+ *   )
+ * }
+ * @example
+ * import { z } from 'zod'
+ *
+ * message(peer, message) {
+ *   const parsedMessage = await wsValidateMessage(
+ *     z.object({
+ *       type: z.enum(['subscribe', 'unsubscribe']),
+ *       topic: z.string(),
+ *     }),
+ *     message,
+ *   )
+ * }
+ */
 export async function wsValidateMessage<
   T extends StandardSchemaV1,
->(schema: T, message: Message | string): Promise<StandardSchemaV1.InferOutput<T>> {
-  let result = schema['~standard'].validate(wsParseMessage(message))
+>(schema: T, message: Message | StandardSchemaV1.InferInput<T>): Promise<StandardSchemaV1.InferOutput<T>> {
+  let result: StandardSchemaV1.Result<unknown> | Promise<StandardSchemaV1.Result<unknown>>
+  if (message instanceof Message)
+    result = schema['~standard'].validate(wsParseMessage(message))
+  else
+    result = schema['~standard'].validate(message)
+
   if (result instanceof Promise) result = await result
 
   if (result.issues) {
-    throw new Error(JSON.stringify(result.issues, null, 2))
+    throw new Error('WebSocket:' + JSON.stringify(result.issues, null, 2))
   }
 
   return result.value
 }
+
+/**
+ * Safely validates a WebSocket message against a given schema.
+ * It returns both the validated message and the validation issues, if any.
+ * If the message is a Message object, it's parsed with `wsParseMessage` before validation.
+ *
+ * @template T - The schema to validate the message against.
+ * @param {T} schema - The schema to validate the message against.
+ * @param {Message | StandardSchemaV1.InferInput<T>} message - The WebSocket message to validate.
+ * @returns {Promise<{ value: StandardSchemaV1.InferOutput<T>, issues?: StandardSchemaV1.Issue[] }>} The validated message and the validation issues, if any.
+ *
+ * @example
+ * import * as v from 'valibot'
+ *
+ * message(peer, message) {
+ *   const parsedMessage = await wsSafeValidateMessage(
+ *     v.object({
+ *       type: v.picklist(['subscribe', 'unsubscribe']),
+ *       topic: v.string(),
+ *     }),
+ *     message,
+ *   )
+ *
+ *   if (parsedMessage.issues) {
+ *     console.error('WebSocket:', parsedMessage.issues)
+ *     return
+ *   }
+ *   // else do something with parsedMessage.value
+ * }
+ * @example
+ * import { z } from 'zod'
+ *
+ * message(peer, message) {
+ *   const parsedMessage = await wsSafeValidateMessage(
+ *     z.object({
+ *       type: z.enum(['subscribe', 'unsubscribe']),
+ *       topic: z.string(),
+ *     }),
+ *     message,
+ *   )
+ *
+ *   if (parsedMessage.issues) {
+ *     console.error('WebSocket:', parsedMessage.issues)
+ *     return
+ *   }
+ *   // else do something with parsedMessage.value
+ * }
+ */
 export async function wsSafeValidateMessage<
   T extends StandardSchemaV1,
->(schema: T, message: Message | string): Promise<StandardSchemaV1.InferOutput<T>> {
-  let result = schema['~standard'].validate(wsParseMessage(message))
+>(schema: T, message: Message | StandardSchemaV1.InferInput<T>): Promise<StandardSchemaV1.InferOutput<T>> {
+  let result: StandardSchemaV1.Result<unknown> | Promise<StandardSchemaV1.Result<unknown>>
+  if (message instanceof Message)
+    result = schema['~standard'].validate(wsParseMessage(message))
+  else
+    result = schema['~standard'].validate(message)
+
   if (result instanceof Promise) result = await result
 
   return result
