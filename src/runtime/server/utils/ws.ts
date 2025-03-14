@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { type Options, destr } from 'destr'
-import { Message } from 'crossws'
+import type { Message } from 'crossws'
 
 import type { WSHandlerHooks } from '../../types'
 import { defineWebSocketHandler, useNitroApp, useRuntimeConfig } from '#imports'
@@ -134,7 +134,7 @@ export async function wsValidateMessage<
   T extends StandardSchemaV1,
 >(schema: T, message: Message | StandardSchemaV1.InferInput<T>): Promise<StandardSchemaV1.InferOutput<T>> {
   let result: StandardSchemaV1.Result<unknown> | Promise<StandardSchemaV1.Result<unknown>>
-  if (message instanceof Message)
+  if (message && typeof message === 'object' && 'text' in message && typeof message.text === 'function')
     result = schema['~standard'].validate(wsParseMessage(message))
   else
     result = schema['~standard'].validate(message)
@@ -199,7 +199,7 @@ export async function wsSafeValidateMessage<
   T extends StandardSchemaV1,
 >(schema: T, message: Message | StandardSchemaV1.InferInput<T>): Promise<StandardSchemaV1.InferOutput<T>> {
   let result: StandardSchemaV1.Result<unknown> | Promise<StandardSchemaV1.Result<unknown>>
-  if (message instanceof Message)
+  if (message && typeof message === 'object' && 'text' in message && typeof message.text === 'function')
     result = schema['~standard'].validate(wsParseMessage(message))
   else
     result = schema['~standard'].validate(message)
