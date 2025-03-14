@@ -1,4 +1,3 @@
-import { destr } from 'destr'
 import * as v from 'valibot'
 
 export default defineReactiveWSHandler({
@@ -43,7 +42,7 @@ export default defineReactiveWSHandler({
           payload: v.any(),
         }),
       ]),
-      destr(message.text()),
+      wsParseMessage(message.text()),
     )
     if (!parsedMessage.success) return
     const mem = useMem('ws')

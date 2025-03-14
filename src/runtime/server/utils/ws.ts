@@ -1,4 +1,5 @@
-import { destr } from 'destr'
+import { type Options, destr } from 'destr'
+import type { Message } from 'crossws'
 
 import type {
   Peer,
@@ -62,7 +63,7 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
 
     message(peer, message) {
       const config = getConfig()
-      const m = destr<any>(message.text())
+      const m = wsParseMessage(message.text())
       if (m?.topic && config.topics.internals.includes(m.topic)) return
       if (m?.type === 'subscribe' && m?.topic && !config.topics.defaults.includes(m.topic))
         peer.subscribe(m.topic)
@@ -80,6 +81,28 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
 
     error: (peer, error) => hooks.error?.(peer, error),
   })
+}
+
+/**
+ * Parses a WebSocket message into an object of type T or fallback to the original string.
+ *
+ * @template T - The type to parse the message into. Defaults to 'any'.
+ * @param {Message | string} message - The WebSocket message to parse. Can be a string or a Message object.
+ * @param {Options} [options] - Optional configuration for parsing: { strict?: boolean }
+ * @returns {T | string} The parsed message as an object of type T, or the original string if parsing fails.
+ *
+ * @remarks
+ * This function uses `destr` to safely parse the message. If the message is a string, it's passed directly to `destr`.
+ * If it's a Message object, the function calls `message.text()` to get the string content.
+ * If parsing fails, `destr` will return the original string value.
+ */
+export function wsParseMessage<T = any>(message: Message | string, options?: Options): T | string {
+  return destr<T>(
+    typeof message === 'string'
+      ? message
+      : message.text(),
+    options,
+  )
 }
 
 /**

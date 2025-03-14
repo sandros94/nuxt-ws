@@ -56,6 +56,10 @@ export default defineNuxtModule<ModuleOptions>({
         from: resolve('./runtime/server/utils/ws'),
       },
       {
+        name: 'wsParseMessage',
+        from: resolve('./runtime/server/utils/ws'),
+      },
+      {
         name: 'defineReactiveWSHandler',
         from: resolve('./runtime/server/utils/ws'),
       },
