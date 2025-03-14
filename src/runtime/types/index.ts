@@ -1,6 +1,6 @@
 import type { UseWebSocketOptions, UseWebSocketReturn } from '@vueuse/core'
 import type { Peer, Message, WSError } from 'crossws'
-import type { Ref, ToRefs } from 'vue'
+import type { Ref, Reactive } from 'vue'
 
 // TODO: check nitro build types
 import type { AllTopics } from '#build/types/ws'
@@ -25,7 +25,7 @@ export interface WSMessage<
   payload: T[keyof T]
 }
 
-export type WSStates<T extends Record<string | AllTopics, any>> = ToRefs<T>
+export type WSStates<T extends Record<string | AllTopics, any>> = Reactive<T>
 
 export interface UseWSReturn<T extends Record<string | AllTopics, any>, D> extends Omit<UseWebSocketReturn<D>, 'send'> {
   /**

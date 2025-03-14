@@ -9,9 +9,9 @@ import {
 import {
   type Ref,
   ref,
-  computed,
   reactive,
-  toRefs,
+  computed,
+  toRef,
   watch,
   useState,
   useRequestURL,
@@ -28,23 +28,6 @@ import type { AllTopics, WSRuntimeConfig } from '#build/types/ws'
 
 const wsStateKey = '$ws:state'
 
-function wsState<
-  T extends Record<string | AllTopics, any>,
->(topics?: Array<keyof T | string>) {
-  const { defaults, internals } = useRuntimeConfig().public.ws.topics as WSRuntimeConfig['topics']
-
-  const mergedTopics = computed(
-    () => merge(internals, [...defaults, ...topics || []]) as (string | AllTopics)[],
-  )
-  const states = useState<T>(wsStateKey,
-    () => mergedTopics.value.reduce((acc, topic) => ({
-      ...acc,
-      [topic]: undefined,
-    }), {} as T),
-  )
-  return states
-}
-
 /**
  * Create multiple global reactive refs that will be hydrated but not shared across ssr requests
  * Each state is based on the available topics defined in the runtime configuration or via `useWS`
@@ -57,8 +40,18 @@ function wsState<
 export function useWSState<
   T extends Record<string | AllTopics, any>,
 >(topics: Array<keyof T | string> = []): WSStates<T> {
-  const states = wsState(topics)
-  return toRefs<T>(states.value)
+  const { defaults, internals } = useRuntimeConfig().public.ws.topics as WSRuntimeConfig['topics']
+
+  const mergedTopics = computed(
+    () => merge(internals, [...defaults, ...topics || []]) as (string | AllTopics)[],
+  )
+  const states = useState<T>(wsStateKey,
+    () => mergedTopics.value.reduce((acc, topic) => ({
+      ...acc,
+      [topic]: undefined,
+    }), {} as T),
+  )
+  return reactive(states.value)
 }
 
 export function useWS<
@@ -76,7 +69,7 @@ export function useWS<
     throw new Error('[useWS] `route` is required in options or `nuxt.config.ts`')
   }
 
-  const states = wsState<T>(topics)
+  const states = useWSState<T>(topics)
   const data: Ref<D | null> = ref(null)
 
   const _query = reactive({
@@ -105,7 +98,8 @@ export function useWS<
     onMessage(_, message) {
       const parsed = destr<WSMessage<T>>(message.data)
       if (!!parsed && typeof parsed === 'object' && 'topic' in parsed && 'payload' in parsed) {
-        states.value[parsed.topic] = parsed.payload as T[keyof T]
+        const state = toRef(states, String(parsed.topic))
+        state.value = parsed.payload as T[keyof T]
       }
       else {
         data.value = message.data
@@ -188,7 +182,7 @@ export function useWS<
   })
 
   return {
-    states: toRefs<T>(states.value),
+    states,
     data,
     _data,
     status,

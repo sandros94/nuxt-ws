@@ -46,11 +46,6 @@
             </code>
             <br>
           </pre>
-          <ul>
-            <li v-for="(item, index) of history" :key="index">
-              <code>{{ item }}</code><br>
-            </li>
-          </ul>
         </div>
       </div>
     </div>
@@ -58,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-const { states, data, status, send, open } = useWS<{
+const { states, status, send, open } = useWS<{
   notifications: {
     message: string
   }
@@ -80,12 +75,7 @@ const {
   chat,
   session,
   _internal,
-} = states
-
-const history = ref<string[]>([])
-watch(data, (newValue) => {
-  history.value.push(`server: ${newValue}`)
-})
+} = toRefs(states)
 
 const message = ref<string>('')
 function sendData() {
@@ -99,7 +89,6 @@ function sendData() {
     [_internal.value.connectionId]: message.value,
   }
 
-  history.value.push(`client: ${JSON.stringify({ topic: 'chat', data: chat.value })}`)
   send('publish', 'chat', chat.value)
   message.value = ''
 }
