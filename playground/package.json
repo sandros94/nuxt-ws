@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "name": "nuxt-ws-playground",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "generate": "nuxi generate"
+  },
+  "dependencies": {
+    "@sandros94/lab": "^0.1.10",
+    "nuxt-ws": "latest",
+    "nuxt": "^3.16.0",
+    "valibot": "^1.0.0-rc.4"
+  }
+}
