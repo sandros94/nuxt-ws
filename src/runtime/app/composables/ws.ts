@@ -122,44 +122,54 @@ export function useWS<
    * Sends raw message data through the WebSocket connection.
    * Messages are buffered if connection is not yet established.
    *
-   * @template M - Type extending string | ArrayBuffer | Blob | object
-   * @param {M} payload - Raw message to send
+   * @template Payload - Type extending string | ArrayBuffer | Blob
+   * @param {Payload} payload - Payload to send
    * @returns {boolean} Success status of the send operation
    *
    * @example
    * send("Hello World")
+   * send(new ArrayBuffer(8))
    * send(new Blob(['Hello']))
-   * send({ type: "message", content: "Hello" })
    */
-  function send<M extends (string | ArrayBuffer | Blob | object)>(payload: M): boolean
+  function send<Payload extends (string | ArrayBuffer | Blob)>(payload: Payload): boolean
   /**
    * Sends a subscription or unsubscription message to a specific WebSocket topic.
    *
-   * @template M - Type extending WSMessage<T>
+   * @template Type - Type extending 'subscribe' | 'unsubscribe'
+   * @template Topic - Type extending keyof T
    * @param {'subscribe' | 'unsubscribe'} type - Type of the operation
-   * @param {M['topic']} topic - Target topic name
+   * @param {Topic} topic - Target topic name
    * @returns {boolean} Success status of the send operation
    *
    * @example
    * send("subscribe", "notifications")
    * send("unsubscribe", "chat")
    */
-  function send<M extends { type: 'subscribe' | 'unsubscribe', topic: keyof T }>(type: M['type'], topic: M['topic']): boolean
+  function send<
+    Type extends 'subscribe' | 'unsubscribe',
+    Topic extends keyof T,
+  >(type: Type, topic: Topic): boolean
   /**
    * Sends a payload to a specific WebSocket topic.
    * Messages are buffered if connection is not yet established.
    *
-   * @template M - Type extending WSMessage<T>
+   * @template Type - Type extending 'publish'
+   * @template Topic - Type extending keyof T
+   * @template Payload - Type extending T[Topic] extends Array<infer U> ? U : T[Topic]
    * @param {'publish'} type - Type of the operation
-   * @param {M['topic']} topic - Target topic name
-   * @param {M['payload']} payload - Data to send to the topic
+   * @param {Topic} topic - Target topic name
+   * @param {Payload} payload - Payload to send
    * @returns {boolean} Success status of the send operation
    *
    * @example
    * send("publish", "notifications", { message: "Hello" })
-   * send("publish", "chat", { message: "Hello" })
+   * send("publish", "chat", { text: "Hello" })
    */
-  function send<M extends { type: 'publish', topic: keyof T, payload: T[keyof T] }>(type: M['type'], topic: M['topic'], payload: M['payload']): boolean
+  function send<
+    Type extends 'publish',
+    Topic extends keyof T,
+    Payload extends T[Topic] extends Array<infer U> ? U : T[Topic],
+  >(type: Type, topic: Topic, payload: Payload): boolean
   function send<
     M extends (
       | { type: 'subscribe' | 'unsubscribe', topic: keyof T, payload: never }
@@ -168,8 +178,6 @@ export function useWS<
   >(...args: any): boolean {
     if (args.length === 1) {
       const payload = args[0]
-      if (typeof payload === 'object' && !(payload instanceof Blob) && !(payload instanceof ArrayBuffer))
-        return _send(JSON.stringify(payload), true)
       return _send(payload)
     }
 

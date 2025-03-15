@@ -33,9 +33,18 @@ export interface UseWSReturn<T extends Record<string | AllTopics, any>, D> exten
    */
   _data: Ref<D | null>
   states: WSStates<T>
-  send<M extends (string | ArrayBuffer | Blob | object)>(payload: M): boolean
-  send<M extends { type: 'subscribe' | 'unsubscribe', topic: keyof T }>(type: M['type'], topic: M['topic']): boolean
-  send<M extends { type: 'publish', topic: keyof T, payload: T[keyof T] }>(type: 'publish', topic: M['topic'], payload: M['payload']): boolean
+  send<
+    Payload extends (string | ArrayBuffer | Blob),
+  >(payload: Payload): boolean
+  send<
+    Type extends 'subscribe' | 'unsubscribe',
+    Topic extends keyof T,
+  >(type: Type, topic: Topic): boolean
+  send<
+    Type extends 'publish',
+    Topic extends keyof T,
+    Payload extends T[Topic] extends Array<infer U> ? U : T[Topic],
+  >(type: Type, topic: Topic, payload: Payload): boolean
   /**
    * Upstream, mainly for internal use.
    */
