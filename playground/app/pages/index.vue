@@ -65,10 +65,10 @@ const items = ['notifications', 'chat'] as const
 const channels = ref<Array<typeof items[number]>>([])
 
 const { states, status, send, open, close } = useWS<{
-  notifications: {
+  notifications?: {
     message: string
   }
-  chat: {
+  chat?: {
     user?: string
     text: string
   }[]

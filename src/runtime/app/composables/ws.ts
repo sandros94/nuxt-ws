@@ -147,7 +147,7 @@ export function useWS<
    */
   function send<
     Type extends 'subscribe' | 'unsubscribe',
-    Topic extends keyof T,
+    Topic extends keyof Required<T>,
   >(type: Type, topic: Topic): boolean
   /**
    * Sends a payload to a specific WebSocket topic.
@@ -167,8 +167,8 @@ export function useWS<
    */
   function send<
     Type extends 'publish',
-    Topic extends keyof T,
-    Payload extends T[Topic] extends Array<infer U> ? U : T[Topic],
+    Topic extends keyof Required<T>,
+    Payload extends Required<T>[Topic] extends Array<infer U> ? U : Required<T>[Topic],
   >(type: Type, topic: Topic, payload: Payload): boolean
   function send<
     M extends (
