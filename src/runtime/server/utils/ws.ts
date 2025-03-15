@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
+import type { NitroApp } from 'nitropack/types'
 import { type Options, destr } from 'destr'
 import type { Message } from 'crossws'
 
@@ -20,11 +21,16 @@ interface _WSRuntimeConfig {
  * @see — https://h3.unjs.io/guide/websocket
  */
 export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
+  let nitroApp: NitroApp
   let config: _WSRuntimeConfig
 
-  const getConfig = () => {
+  function getConfig() {
     if (config) return config
     return config = useRuntimeConfig().public.ws as _WSRuntimeConfig
+  }
+  function getNitroApp() {
+    if (nitroApp) return nitroApp
+    return nitroApp = useNitroApp()
   }
 
   return defineWebSocketHandler({
@@ -32,7 +38,7 @@ export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
 
     async open(peer) {
       const config = getConfig()
-      const nitroHooks = useNitroApp().hooks
+      const nitroHooks = getNitroApp().hooks
 
       // Automatically subscribe to internal and default topics
       config.topics.internals.forEach(topic => peer.subscribe(topic))
