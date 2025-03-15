@@ -13,7 +13,7 @@ A Nuxt module aimed to simplify the use of WebSockets.
 
 ## Features
 
-- `useWS` ([demo](https://reactive-ws.s94.dev/)): A WebSocket implementation with built-in shared state management, channel subscriptions, and type safety.
+- `useWS` ([demo](https://reactive-ws.s94.dev/)): A WebSocket implementation with built-in shared state management, topic subscriptions, and type safety.
 - `defineReactiveWSHandler`: wraps Nitro's `defineWebSocketHandler` to provide additional configuration, hooks and automatic topic subscription.
 
 ## Quick Setup
@@ -33,6 +33,129 @@ export default defineNuxtConfig({
   ws: {
     path: '/_ws', // default undefined
   }
+})
+```
+
+## Real-time Remote State Management
+
+A WebSocket implementation with built-in shared state management, topic subscriptions, and type safety.
+
+- 🔄 Automatic reconnection
+- 📦 Built-in shared state management per-topic
+- 🤖 Build-in validation with [Standard Schema](https://github.com/standard-schema/standard-schema)
+- 🔐 Type-safe messages and topics
+- 📢 Hooking system to trigger messages globaly
+- ⛓️ Integrates easily with other Nuxt modules
+
+Take in example the following setup:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['nuxt-ws'],
+  ws: {
+    route: '/_ws',             // WebSocket endpoint to auto-connect
+    topics: {
+      defaults: ['session'],   // Auto-subscribed topics
+    }
+  }
+})
+```
+
+Client-Side (`pages/chat.client.vue`):
+```vue
+<template>
+  <div>
+    <div v-if="status === 'OPEN'">
+      Connected, Users: {{ states['session'].users }}
+    </div>
+    <div v-else>
+      Disconnected
+    </div>
+    <div v-for="({ user, text }, key) in states['chat']" :key>
+      {{ user }}: {{ text }}
+    </div>
+    <input v-model="textRef" @keyup.enter="sendMessage()">
+  </div>
+</template>
+
+<script setup lang="ts">
+const textRef = ref('')
+const { states, status, send } = useWS<{
+  chat: {
+    user?: string
+    text: string
+  }[]
+  session: {
+    users: number
+  }
+}>(['chat'])
+
+function sendMessage() {
+  send('publish', 'chat', {
+    text: textRef.value,
+  })
+  textRef.value = ''
+}
+</script>
+```
+
+Server-Side (`server/routes/_ws.ts`):
+```ts
+import * as v from 'valibot'
+
+export default defineReactiveWSHandler({
+  async open(peer) {
+    // Update peer with 'chat' data from storage
+    const chat = await useStorage('ws').getItem('chat')
+    if (chat)
+      peer.send(JSON.stringify({
+        topic: 'chat',
+        payload: chat,
+      }), { compress: true })
+
+    // Update everyone's session metadata
+    const payload = JSON.stringify({ topic: 'session', payload: { users: peer.peers.size } })
+    peer.send(payload, { compress: true })
+    peer.publish('session', payload, { compress: true })
+  },
+
+  async message(peer, message) {
+    // Validate the incoming chat message
+    const parsedMessage = await wsValidateMessage( // built-in validation util
+      v.object({
+        type: v.literal('publish'),
+        topic: v.literal('chat'),
+        payload: v.object({ text: v.string() }),
+      }),
+      message,
+    )
+
+    // Update chat data in storage
+    const mem = useStorage('ws')
+    const { topic, payload } = parsedMessage
+    const _chat = await mem.getItem<Array<{ user: string, text: string }>>('chat') || []
+    const newChat = [..._chat, { ...payload, user: peer.id }]
+    await mem.setItem(topic, newChat)
+
+    // Broadcast the new chat message to everyone
+    peer.send(JSON.stringify({ topic, payload: newChat }), { compress: true })
+    peer.publish(topic, JSON.stringify({ topic, payload: newChat }), { compress: true })
+  },
+
+  close(peer) {
+    // Update everyone's session metadata
+    peer.publish(
+      'session',
+      JSON.stringify({
+        topic: 'session',
+        payload: {
+          users: peer.peers.size,
+        },
+      }),
+      { compress: true },
+    )
+  },
 })
 ```
 
