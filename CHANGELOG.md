@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.2
+
+[compare changes](https://github.com/sandros94/nuxt-ws/compare/v0.0.1...v0.0.2)
+
+### 📖 Documentation
+
+- Update readme ([5949fd1](https://github.com/sandros94/nuxt-ws/commit/5949fd1))
+
+### ❤️ Contributors
+
+- Sandro Circi ([@sandros94](https://github.com/sandros94))
+
 ## v0.0.1
 
 
