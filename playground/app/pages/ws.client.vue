@@ -6,20 +6,39 @@
     <div :style="{ marginTop: '1rem' }">
       <div>
         <div>
+          Channels:
+          <div class="state-selector">
+            <div v-for="state in items" :key="state">
+              <input
+                :id="state"
+                v-model="channels"
+                type="checkbox"
+                :value="state"
+              >
+              <label :for="state">{{ state.charAt(0).toUpperCase() + state.slice(1) }}</label>
+            </div>
+          </div>
+          <button @click="triggerNotification()">
+            Trigger notification
+          </button>
           <button
             v-if="status === 'CLOSED'"
             @click.prevent="open()"
           >
             Reconnect
           </button>
-          <button @click="triggerNotification()">
-            Trigger notification
+          <button
+            v-else-if="status === 'OPEN'"
+            @click.prevent="close()"
+          >
+            Close
           </button>
         </div>
         <div>
           Send chat message:
-          <input v-model="message">
+          <input v-model="message" :disabled="!channels.includes('chat')">
           <button
+            :disabled="!channels.includes('chat')"
             @click.prevent="sendData"
           >
             Send
@@ -29,12 +48,12 @@
           <p>Status: {{ status }}</p>
           <p>Updates</p>
           <pre>
-            <code v-if="chat">
-              {{ chat }}
+            <code v-if="states['chat']">
+              {{ states['chat'] }}
             </code>
             <br>
-            <code v-if="notifications">
-              {{ notifications }}
+            <code v-if="states['notifications']">
+              {{ states['notifications'] }}
             </code>
             <br>
             <code v-if="session">
@@ -44,7 +63,6 @@
             <code v-if="_internal">
               {{ _internal }}
             </code>
-            <br>
           </pre>
         </div>
       </div>
@@ -53,11 +71,14 @@
 </template>
 
 <script setup lang="ts">
-const { states, status, send, open } = useWS<{
-  notifications: {
+const items = ['notifications', 'chat'] as const
+const channels = ref<Array<typeof items[number]>>([])
+
+const { states, status, send, open, close } = useWS<{
+  notifications?: {
     message: string
   }
-  chat: {
+  chat?: {
     [key: string]: string
   }
   session: {
@@ -68,11 +89,9 @@ const { states, status, send, open } = useWS<{
     topics: string[]
     message?: string
   }
-}>(['notifications', 'chat'])
+}>(channels)
 
 const {
-  notifications,
-  chat,
   session,
   _internal,
 } = toRefs(states)
@@ -84,12 +103,10 @@ function sendData() {
     || !_internal.value?.connectionId
     || status.value !== 'OPEN'
   ) return
-  chat.value = {
-    ...(chat.value || {}),
-    [_internal.value.connectionId]: message.value,
-  }
 
-  send('publish', 'chat', chat.value)
+  send('publish', 'chat', {
+    [_internal.value.connectionId]: message.value,
+  })
   message.value = ''
 }
 

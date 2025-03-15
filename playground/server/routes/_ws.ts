@@ -10,14 +10,13 @@ export default defineReactiveWSHandler({
     })
 
     // Send `_internal` communications
-    const activeChannels = Array.from(peer['_topics'])
     peer.send(JSON.stringify({
       topic: '_internal',
       payload: {
         connectionId: peer.id,
-        topics: activeChannels,
-        message: activeChannels.length
-          ? `Subscribed to ${activeChannels.length} topics`
+        topics: Array.from(peer.topics),
+        message: peer.topics.size
+          ? `Subscribed to ${peer.topics.size} topics`
           : 'Not subscribed to any topic',
       },
     }), { compress: true })
@@ -72,6 +71,16 @@ export default defineReactiveWSHandler({
       else {
         peer.unsubscribe(topic)
       }
+      peer.send(JSON.stringify({
+        topic: '_internal',
+        payload: {
+          connectionId: peer.id,
+          topics: Array.from(peer.topics),
+          message: peer.topics.size
+            ? `Subscribed to ${peer.topics.size} topics`
+            : 'Not subscribed to any topic',
+        },
+      }), { compress: true })
     }
   },
 

@@ -8,11 +8,14 @@ import {
 
 import {
   type Ref,
+  type MaybeRef,
   ref,
   reactive,
   computed,
+  isRef,
   toRef,
   watch,
+  onBeforeUnmount,
   useState,
   useRequestURL,
   useRuntimeConfig,
@@ -39,18 +42,23 @@ const wsStateKey = '$ws:state'
  */
 export function useWSState<
   T extends Record<string | AllTopics, any>,
->(topics: Array<keyof T | string> = []): WSStates<T> {
+>(topics: MaybeRef<Array<keyof T | string>> = []): WSStates<T> {
   const { defaults, internals } = useRuntimeConfig().public.ws.topics as WSRuntimeConfig['topics']
+  const topicsRef = toRef(topics)
 
   const mergedTopics = computed(
-    () => merge(internals, [...defaults, ...topics || []]) as (string | AllTopics)[],
+    () => merge(internals, [...defaults, ...topicsRef.value]) as (string | AllTopics)[],
   )
-  const states = useState<T>(wsStateKey,
-    () => mergedTopics.value.reduce((acc, topic) => ({
-      ...acc,
-      [topic]: undefined,
-    }), {} as T),
-  )
+  const states = useState<T>(wsStateKey, () => ({}) as T)
+
+  watch(mergedTopics, (newTopics) => {
+    const keys = Object.keys(states.value)
+    const newKeys = newTopics.filter(topic => !keys.includes(String(topic)))
+
+    newKeys.forEach((topic) => {
+      states.value[topic as keyof T] = undefined as any
+    })
+  }, { immediate: true })
   return reactive(states.value)
 }
 
@@ -58,7 +66,7 @@ export function useWS<
   T extends Record<string | AllTopics, any>,
   D = any,
 >(
-  topics: Array<keyof T | string> = [],
+  topics: MaybeRef<Array<keyof T | string>> = [],
   options?: WSOptions,
 ): UseWSReturn<T, D> {
   const { route, topics: defTopics } = useRuntimeConfig().public.ws as WSRuntimeConfig
@@ -69,6 +77,7 @@ export function useWS<
     throw new Error('[useWS] `route` is required in options or `nuxt.config.ts`')
   }
 
+  const topicsRef = isRef(topics) ? topics : ref(topics) as Ref<Array<keyof T | string>>
   const states = useWSState<T>(topics)
   const data: Ref<D | null> = ref(null)
 
@@ -98,8 +107,7 @@ export function useWS<
     onMessage(_, message) {
       const parsed = destr<WSMessage<T>>(message.data)
       if (!!parsed && typeof parsed === 'object' && 'topic' in parsed && 'payload' in parsed) {
-        const state = toRef(states, String(parsed.topic))
-        state.value = parsed.payload as T[keyof T]
+        states[String(parsed.topic)] = parsed.payload as T[keyof T]
       }
       else {
         data.value = message.data
@@ -177,8 +185,22 @@ export function useWS<
       setTimeout(() => open(), 100)
     })
 
-  topics.forEach((topic) => {
-    send('subscribe', topic)
+  const stopWatchTopics = watch(topicsRef, (newTopics, oldTopics) => {
+    // get the difference between the new and old topics, subscribe/unsubscribe accordingly
+    const added = newTopics.filter(topic => !oldTopics?.includes(topic))
+    const removed = oldTopics?.filter(topic => !newTopics.includes(topic)) || []
+
+    added.forEach((topic) => {
+      send('subscribe', topic)
+    })
+    removed.forEach((topic) => {
+      send('unsubscribe', topic)
+    })
+  }, { immediate: true })
+
+  onBeforeUnmount(() => {
+    stopWatchTopics()
+    close()
   })
 
   return {
