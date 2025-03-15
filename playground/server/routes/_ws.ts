@@ -43,7 +43,7 @@ export default defineReactiveWSHandler({
         v.object({
           type: v.literal('publish'),
           topic: v.literal('chat'),
-          payload: v.array(v.object({ user: v.string(), text: v.string() })),
+          payload: v.object({ text: v.string() }),
         }),
       ]),
       message,
@@ -53,9 +53,9 @@ export default defineReactiveWSHandler({
     if (parsedMessage.type === 'publish') {
       const { topic, payload } = parsedMessage
 
-      if (Array.isArray(payload)) {
-        const _chat = await mem.getItem(topic) || []
-        const newChat = [..._chat, ...payload]
+      if (topic === 'chat') {
+        const _chat = await mem.getItem('chat') || [] // in prod use related chat id
+        const newChat = [..._chat, { ...payload, user: peer.id }]
         await mem.setItem(topic, newChat)
 
         peer.send(JSON.stringify({ topic, payload: newChat }), { compress: true })

@@ -35,37 +35,29 @@
           </button>
         </div>
         <div>
-          Send chat message:
-          <input v-model="message" :disabled="!channels.includes('chat')">
-          <button
-            :disabled="!channels.includes('chat')"
-            @click.prevent="sendData"
-          >
-            Send
-          </button>
-        </div>
-        <div>
-          <p>Status: {{ status }}</p>
-          <p>Updates</p>
-          <pre>
-            <div v-if="states['chat']">
-              <div v-for="(chat, key) in states['chat']" :key>
-                <code>
-                  {{ chat.user }}: {{ chat.text }}
-                </code>
-              </div>
+          <p>
+            status: {{ status }}
+            <span v-if="session">
+              - users: {{ session.users }}
+            </span>
+          </p>
+          <div v-if="states['chat']">
+            <h3>
+              Chat
+            </h3>
+            <div v-for="({ user, text }, key) in states['chat']" :key>
+              {{ user }}: {{ text }}
             </div>
+            <input v-model="message" :disabled="!channels.includes('chat')" @keyup.enter="sendMessage()">
+          </div>
+          <h3>Info</h3>
+          <pre>
+            <code v-if="_internal">
+              {{ _internal }}
+            </code>
             <br>
             <code v-if="states['notifications']">
               {{ states['notifications'] }}
-            </code>
-            <br>
-            <code v-if="session">
-              {{ session }}
-            </code>
-            <br>
-            <code v-if="_internal">
-              {{ _internal }}
             </code>
           </pre>
         </div>
@@ -79,11 +71,11 @@ const items = ['notifications', 'chat'] as const
 const channels = ref<Array<typeof items[number]>>([])
 
 const { states, status, send, open, close } = useWS<{
-  notifications?: {
+  notifications: {
     message: string
   }
-  chat?: {
-    user: string
+  chat: {
+    user?: string
     text: string
   }[]
   session: {
@@ -102,17 +94,16 @@ const {
 } = toRefs(states)
 
 const message = ref<string>('')
-function sendData() {
+function sendMessage() {
   if (
     !message.value
     || !_internal.value?.connectionId
     || status.value !== 'OPEN'
   ) return
 
-  send('publish', 'chat', [{
-    user: _internal.value.connectionId,
+  send('publish', 'chat', {
     text: message.value,
-  }])
+  })
   message.value = ''
 }
 
