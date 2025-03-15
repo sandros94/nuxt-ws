@@ -48,9 +48,13 @@
           <p>Status: {{ status }}</p>
           <p>Updates</p>
           <pre>
-            <code v-if="states['chat']">
-              {{ states['chat'] }}
-            </code>
+            <div v-if="states['chat']">
+              <div v-for="(chat, key) in states['chat']" :key>
+                <code>
+                  {{ chat.user }}: {{ chat.text }}
+                </code>
+              </div>
+            </div>
             <br>
             <code v-if="states['notifications']">
               {{ states['notifications'] }}
@@ -79,8 +83,9 @@ const { states, status, send, open, close } = useWS<{
     message: string
   }
   chat?: {
-    [key: string]: string
-  }
+    user: string
+    text: string
+  }[]
   session: {
     users: number
   }
@@ -104,9 +109,10 @@ function sendData() {
     || status.value !== 'OPEN'
   ) return
 
-  send('publish', 'chat', {
-    [_internal.value.connectionId]: message.value,
-  })
+  send('publish', 'chat', [{
+    user: _internal.value.connectionId,
+    text: message.value,
+  }])
   message.value = ''
 }
 

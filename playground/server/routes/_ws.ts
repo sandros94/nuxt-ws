@@ -40,6 +40,11 @@ export default defineReactiveWSHandler({
           topic: v.string(),
           payload: v.any(),
         }),
+        v.object({
+          type: v.literal('publish'),
+          topic: v.literal('chat'),
+          payload: v.array(v.object({ user: v.string(), text: v.string() })),
+        }),
       ]),
       message,
     )
@@ -48,14 +53,24 @@ export default defineReactiveWSHandler({
     if (parsedMessage.type === 'publish') {
       const { topic, payload } = parsedMessage
 
-      // Update data from the storage (or init it)
-      const _data = await mem.getItem<Record<string, string>>(topic) || {}
-      const newData = { ..._data, ...payload }
-      await mem.setItem(topic, newData)
+      if (Array.isArray(payload)) {
+        const _chat = await mem.getItem(topic) || []
+        const newChat = [..._chat, ...payload]
+        await mem.setItem(topic, newChat)
 
-      // Update everyone else with the new payload
-      peer.send(JSON.stringify({ topic, payload: newData }), { compress: true })
-      peer.publish(topic, JSON.stringify({ topic, payload: newData }), { compress: true })
+        peer.send(JSON.stringify({ topic, payload: newChat }), { compress: true })
+        peer.publish(topic, JSON.stringify({ topic, payload: newChat }), { compress: true })
+      }
+      else {
+        // Update data from the storage (or init it)
+        const _data = await mem.getItem<Record<string, string>>(topic) || {}
+        const newData = { ..._data, ...payload }
+        await mem.setItem(topic, newData)
+
+        // Update everyone else with the new payload
+        peer.send(JSON.stringify({ topic, payload: newData }), { compress: true })
+        peer.publish(topic, JSON.stringify({ topic, payload: newData }), { compress: true })
+      }
     }
     else {
       const { type, topic } = parsedMessage
