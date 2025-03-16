@@ -138,7 +138,7 @@ export default defineWSHandler({
     const newChat = [..._chat, { ...payload, user: peer.id }]
     await mem.setItem(topic, newChat)
 
-    // Broadcast the new chat message to everyone
+    // Broadcast the updated chat to everyone
     peer.send(JSON.stringify({ topic, payload: newChat }), { compress: true })
     peer.publish(topic, JSON.stringify({ topic, payload: newChat }), { compress: true })
   },
