@@ -15,7 +15,9 @@ const navigation = inject<Ref<ContentNavigationItem[]>>('navigation')
       </UPageAside>
     </template>
 
-    <slot />
+    <UContainer class="max-w-[52rem]">
+      <slot />
+    </UContainer>
 
     <template #right>
       <UPageAside class="lg:w-72 lg:justify-self-end">

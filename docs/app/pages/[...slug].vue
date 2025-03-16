@@ -53,25 +53,23 @@ const links = computed(() => {
 
 <template>
   <UPage v-if="page">
-    <UContainer class="max-w-[48rem]">
-      <UPageHeader
-        :title="page.title"
-        :description="page.description"
-        :links="page.links"
-        :headline="headline"
+    <UPageHeader
+      :title="page.title"
+      :description="page.description"
+      :links="page.links"
+      :headline="headline"
+    />
+
+    <UPageBody>
+      <ContentRenderer
+        v-if="page"
+        :value="page"
       />
 
-      <UPageBody>
-        <ContentRenderer
-          v-if="page"
-          :value="page"
-        />
+      <USeparator v-if="surround?.length" />
 
-        <USeparator v-if="surround?.length" />
-
-        <UContentSurround :surround="surround" />
-      </UPageBody>
-    </UContainer>
+      <UContentSurround :surround="surround" />
+    </UPageBody>
 
     <ClientOnly>
       <Teleport v-if="page?.body?.toc?.links?.length" to="#aside-toc">
