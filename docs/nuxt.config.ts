@@ -3,7 +3,6 @@ import pkg from '../package.json'
 export default defineNuxtConfig({
   modules: [
     '../src/module',
-    '@nuxt/eslint',
     '@nuxt/image',
     '@nuxt/ui-pro',
     '@nuxt/content',
