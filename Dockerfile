@@ -11,7 +11,9 @@ FROM base AS builder
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml /docs/package.json /playground/package.json .npmrc /app/
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc /app/
+COPY /docs/package.json /app/docs/
+COPY /playground/package.json /app/playground/
 RUN npm i -g --force corepack && corepack enable
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
