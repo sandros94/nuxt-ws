@@ -20,7 +20,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --shamefully-hoist
 
 ARG NUXT_UI_PRO_LICENSE
-ENV NUXT_PUBLIC_PLAUSIBLE_API_HOST=
 
 COPY . .
 RUN pnpm run dev:prepare
@@ -31,6 +30,8 @@ RUN --mount=type=cache,id=nuxt,target=/app/node_modules/.cache/nuxt/.nuxt \
 FROM base AS runtime
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
+
+ENV NUXT_PUBLIC_PLAUSIBLE_API_HOST=
 
 USER node
 EXPOSE 3000
