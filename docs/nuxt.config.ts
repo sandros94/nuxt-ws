@@ -87,4 +87,8 @@ export default defineNuxtConfig({
     },
     provider: 'iconify',
   },
+
+  plausible: {
+    apiHost: 'https://plausible.digitoolmedia.com',
+  },
 })
