@@ -52,7 +52,7 @@ Integrated concepts and features
   :::u-page-feature
   ---
   icon: i-lucide-smartphone-nfc
-  to: /usage/usws
+  to: /usage/usews
   ---
   #title
   useWS
