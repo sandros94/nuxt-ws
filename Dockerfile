@@ -31,8 +31,6 @@ FROM base AS runtime
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
-ENV NUXT_PUBLIC_PLAUSIBLE_API_HOST=
-
 USER node
 EXPOSE 3000
 HEALTHCHECK  --retries=10 --start-period=5s \
