@@ -9,11 +9,11 @@ A Nuxt module aimed to simplify real-time communication with built-in automatic 
 
 - [✨ &nbsp;Release Notes](/CHANGELOG.md)
 <!-- - [🏀 Online playground](https://stackblitz.com/github/sandros94/lab?file=playground%2Fapp.vue) -->
-<!-- - [📖 &nbsp;Documentation](https://example.com) -->
+- [📖 &nbsp;Documentation](https://nuxt-ws.s94.dev)
 
 ## Features
 
-- `useWS` ([demo](https://reactive-ws.s94.dev/)): A WebSocket implementation with built-in shared state management, topic subscriptions, and type safety.
+- `useWS`: A WebSocket implementation with built-in shared state management, topic subscriptions, and type safety.
 - `defineWSHandler`: wraps Nitro's `defineWebSocketHandler` to provide additional configuration, hooks and automatic topic subscription.
 
 ## Quick Setup
