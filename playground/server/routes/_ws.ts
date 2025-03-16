@@ -28,6 +28,24 @@ export default defineWSHandler({
   },
 
   async message(peer, message) {
+    const mem = useMem('ws')
+    // Validate incoming subscription/unsubscription
+    const parsedSubUnsub = await wsSafeValidateMessage(
+      v.object({
+        type: v.picklist(['subscribe', 'unsubscribe']),
+        topic: v.string(),
+      }),
+      message,
+    )
+    if (!parsedSubUnsub.issues && parsedSubUnsub.value.type === 'subscribe') {
+      // Subscribe to the topic
+      peer.subscribe(parsedSubUnsub.value.topic)
+      // Fetch data from storage and send it to the peer
+      const payload = await mem.getItem(parsedSubUnsub.value.topic)
+      if (payload)
+        peer.send(JSON.stringify({ topic: parsedSubUnsub.value.topic, payload }), { compress: true })
+    }
+
     // Validate the incoming message
     const parsedMessage = await wsValidateMessage(
       v.union([
@@ -48,7 +66,6 @@ export default defineWSHandler({
       ]),
       message,
     )
-    const mem = useMem('ws')
 
     if (parsedMessage.type === 'publish') {
       const { topic, payload } = parsedMessage

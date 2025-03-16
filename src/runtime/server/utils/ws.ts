@@ -59,8 +59,7 @@ export function defineWSHandler(hooks: Partial<WSHandlerHooks>) {
       const config = getConfig()
       const m = wsParseMessage(message.text())
       if (m?.topic && config.topics.internals.includes(m.topic)) return
-      if (m?.type === 'subscribe' && m?.topic && !config.topics.defaults.includes(m.topic))
-        peer.subscribe(m.topic)
+      if (m?.type === 'subscribe' && m?.topic && config.topics.defaults.includes(m.topic)) return
       if (m?.type === 'unsubscribe' && m?.topic)
         peer.unsubscribe(m.topic)
 
