@@ -203,7 +203,10 @@ export async function wsValidateMessage<
  */
 export async function wsSafeValidateMessage<
   T extends StandardSchemaV1,
->(schema: T, message: Message | StandardSchemaV1.InferInput<T>): Promise<StandardSchemaV1.InferOutput<T>> {
+>(
+  schema: T,
+  message: Message | StandardSchemaV1.InferInput<T>,
+): Promise<StandardSchemaV1.Result<StandardSchemaV1.InferOutput<T>>> {
   let result: StandardSchemaV1.Result<unknown> | Promise<StandardSchemaV1.Result<unknown>>
   if (message && typeof message === 'object' && 'text' in message && typeof message.text === 'function')
     result = schema['~standard'].validate(wsParseMessage(message))
