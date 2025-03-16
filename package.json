@@ -28,6 +28,7 @@
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
     "docs": "nuxt dev docs",
     "docs:build": "nuxt build docs",
+    "docs:prepare": "nuxt prepare docs",
     "docs:preview": "nuxt preview docs",
     "release": "pnpm lint && pnpm prepack && changelogen --release --push --publish",
     "lint": "eslint .",

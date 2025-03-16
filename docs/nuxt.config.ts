@@ -85,4 +85,12 @@ export default defineNuxtConfig({
   plausible: {
     apiHost: 'https://plausible.digitoolmedia.com',
   },
+
+  ws: {
+    route: '/_ws',
+    topics: {
+      internals: ['_internal', 'notifications'],
+      defaults: ['session'],
+    },
+  },
 })
