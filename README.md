@@ -14,7 +14,7 @@ A Nuxt module aimed to simplify real-time communication with built-in automatic 
 ## Features
 
 - `useWS` ([demo](https://reactive-ws.s94.dev/)): A WebSocket implementation with built-in shared state management, topic subscriptions, and type safety.
-- `defineReactiveWSHandler`: wraps Nitro's `defineWebSocketHandler` to provide additional configuration, hooks and automatic topic subscription.
+- `defineWSHandler`: wraps Nitro's `defineWebSocketHandler` to provide additional configuration, hooks and automatic topic subscription.
 
 ## Quick Setup
 
@@ -104,7 +104,7 @@ Server-Side (`server/routes/_ws.ts`):
 ```ts
 import * as v from 'valibot'
 
-export default defineReactiveWSHandler({
+export default defineWSHandler({
   async open(peer) {
     // Update peer with 'chat' data from storage
     const chat = await useStorage('ws').getItem('chat')

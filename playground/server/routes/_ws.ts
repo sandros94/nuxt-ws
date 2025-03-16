@@ -1,6 +1,6 @@
 import * as v from 'valibot'
 
-export default defineReactiveWSHandler({
+export default defineWSHandler({
   async open(peer) {
     // Update peer with data from storage
     peer.topics.forEach(async (topic) => {

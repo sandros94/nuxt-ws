@@ -20,7 +20,7 @@ interface _WSRuntimeConfig {
  *
  * @see — https://h3.unjs.io/guide/websocket
  */
-export function defineReactiveWSHandler(hooks: Partial<WSHandlerHooks>) {
+export function defineWSHandler(hooks: Partial<WSHandlerHooks>) {
   let nitroApp: NitroApp
   let config: _WSRuntimeConfig
 

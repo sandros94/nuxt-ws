@@ -68,7 +68,7 @@ export default defineNuxtModule<ModuleOptions>({
         from: resolve('./runtime/server/utils/ws'),
       },
       {
-        name: 'defineReactiveWSHandler',
+        name: 'defineWSHandler',
         from: resolve('./runtime/server/utils/ws'),
       },
     ])
