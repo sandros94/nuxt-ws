@@ -51,6 +51,42 @@ Integrated concepts and features
 #features
   :::u-page-feature
   ---
+  icon: i-lucide-smartphone-nfc
+  to: /usage/usws
+  ---
+  #title
+  useWS
+
+  #description
+  The all-in-one composable to manage reactive WebSocket connections from client-side.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-arrow-left-right
+  to: /usage/definewshandler
+  ---
+  #title
+  defineWSHandler
+
+  #description
+  The all-in-one utility to manage reactive WebSocket connections from server-side.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-hammer
+  to: /usage/validation
+  ---
+  #title
+  Validation
+
+  #description
+  Validation utils for incoming messages from the client.
+  :::
+
+  :::u-page-feature
+  ---
   icon: i-lucide-messages-square
   to: /usage/topics
   ---
