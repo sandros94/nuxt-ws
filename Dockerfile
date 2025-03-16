@@ -20,7 +20,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --shamefully-hoist
 
 ARG NUXT_UI_PRO_LICENSE
-ENV NUXT_UI_PRO_LICENSE=$NUXT_UI_PRO_LICENSE
+ENV NUXT_PUBLIC_PLAUSIBLE_API_HOST=
 
 COPY . .
 RUN pnpm run dev:prepare
