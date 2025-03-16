@@ -84,11 +84,6 @@ onMounted(() => {
     <NuxtLoadingIndicator />
 
     <AppHeader />
-    <DevOnly>
-      <pre>
-        {{ states }}
-      </pre>
-    </DevOnly>
 
     <UMain>
       <NuxtLayout>
