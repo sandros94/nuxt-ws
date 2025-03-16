@@ -178,7 +178,7 @@ export function useWS<
   >(...args: any): boolean {
     if (args.length === 1) {
       const payload = args[0]
-      return _send(payload)
+      return _send(payload, true)
     }
 
     const [type, topic, payload] = args as [M['type'], M['topic'], M['payload']]
